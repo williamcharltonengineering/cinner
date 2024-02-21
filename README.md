@@ -6,18 +6,26 @@
 It's a Python script that allows you to track the time spent working in your projects or tasks.
 At the moment, this script doesn't have external dependencies so it's ready to run.
 
+#### Development
+
+```
+python3 -m venv .venv
+source .venv/bin/activate
+pip install .
+```
+
 #### Installation: 
 
-`$ pip install time-tracker-cli`
+`$ pip install cinner`
 
 #### How to use:
 
 **Help menu:**
 
-`$ time-tracker-cli -h`
+`$ cinner -h`
 
 ```
-usage: time-tracker-cli [-h] [-p PATH] [-r] project
+usage: cinner [-h] [-p PATH] [-r] project
 
 positional arguments:
   project               project name
@@ -30,7 +38,7 @@ optional arguments:
 
 **Start/end working session**:
 
-`$ time-tracker-cli -p "~/Documents/my_project_time_tracker_data.json" "my_project"`
+`$ cinner -p "~/Documents/my_project_time_tracker_data.json" "my_project"`
 
 The file or project within the file will be created automatically if it doesn't exist.
 
@@ -61,7 +69,7 @@ Unfinished sessions will have a `null` value in the `end` field.
 To calculate the time spent working in a project, run:
 
 ```
-$ time-tracker-cli -r -p "~/Documents/my_project_time_tracker_data.json" "my_project" 
+$ cinner -r -p "~/Documents/my_project_time_tracker_data.json" "my_project" 
 
 Time spent working on project: 'my_project'
 1 day, 7:52:19
@@ -71,12 +79,8 @@ Time spent in ongoing session: 0:04:10.492647
 
 #### TODO:
 
-- [x] Add more functions to estimate the time spent working in a project (total, mean per day).
-- [x] Add an argument to request a "report" of the time spent working in a project.
-- [x] Add more documentation.
-- [x] Add a simple GUI (optional). 
-- [ ] Define behavior for unfinished sessions.
-
-#### GUI version
-
-Check out [Time Tracker](https://github.com/pazitos10/time-tracker)
+- [ ] add option to show hours (not days) in report
+- [ ] add config option for billable rate ($/hr)
+- [ ] add option to report on a calendar month
+- [ ] add billable amount in report
+- [ ] change date format to yyyy/m/d

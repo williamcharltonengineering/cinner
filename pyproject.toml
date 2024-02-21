@@ -1,22 +1,22 @@
 [tool.poetry]
-name = "time-tracker-cli"
+name = "cinner"
 version = "1.0.1"
-description = "time-tracker-cli is a Python script that allows you to track the time spent working in your projects or tasks."
+description = "cinner is a (pronounced check-in-er) is a multitool for keeping track of time-based projects."
 license = "MIT"
 authors = [
-    "pazitos10 <pazosbruno@gmail.com>"
+    "williamcharltonengineering <will@williamcharltonengineering.com>"
 ]
 
 readme = 'README.md'
 
-repository = "https://github.com/pazitos10/time-tracker-cli"
-homepage = "https://github.com/pazitos10/time-tracker-cli"
+repository = "https://github.com/williamcharltonengineering/cinner"
+homepage = "https://github.com/williamcharltonengineering/cinner"
 
-keywords = ['time', 'tracking', 'productivity', 'time tracking']
+keywords = ['time', 'tracking', 'productivity', 'time tracking', 'reporting']
 
 [tool.poetry.dependencies]
 python = "^3.6"
 toml = "^0.9"
 
 [tool.poetry.scripts]
-time-tracker-cli = 'time_tracker_cli:main'
+cinner = 'cinner:main'
