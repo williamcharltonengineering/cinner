@@ -173,14 +173,16 @@ def get_report(project_name, data):
         rate = 125.00
         total_hours = total.get('completed_sessions').total_seconds() / 3600
         if total['ongoing_delta']:
-            ongoing = total['ongoing_delta'].total_seconds()
+            ongoing = total['ongoing_delta'].total_seconds() / 3600
         else:
-            ongoing = 0
-        print(f"Time spent working on project: '{project_name}'")
-        print(total.get('completed_sessions'))
+            ongoing = 0.0
+        all_hours = round(((total_hours + ongoing) * 100) / 100, 2)
+        total_combined = rate * all_hours
+        print(f"Time spent working on '{project_name}': {all_hours}")
+        # print(total.get('completed_sessions'))
         print(f"Ongoing sessions: {total['ongoing_sessions']}")
         print(f"Time spent in ongoing session: {total['ongoing_delta']}")
-        print(f"Invoice amount: ${rate}/hour * {math.ceil(total_hours * 100) / 100} + {total['ongoing_delta']} hours = ${math.ceil(rate * (total_hours + (ongoing / 3600 or 0)) * 100) / 100}")  # noqa:E501
+        print(f"Invoice amount: ${rate}/hour * ({total_hours} hours + {ongoing} hours) = ${total_combined}")  # noqa:E501
     else:
         print(f"Project '{project_name}' was not found in data file")
 
