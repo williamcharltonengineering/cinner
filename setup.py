@@ -11,6 +11,7 @@ setup(
         # List your project dependencies here.
         # They will be installed by pip when your project is installed.
         # Example: 'requests>=2.25.1',
+        "matplotlib"
     ],
     entry_points={
         # If your package has scripts or executables, you can specify them here.

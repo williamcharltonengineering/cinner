@@ -2,64 +2,141 @@
 # -*- coding: utf-8 -*-
 
 import os
-import argparse
 import json
-import math
-from functools import reduce
+import argparse
 from datetime import datetime, timedelta
+from functools import reduce
+from collections import defaultdict
 
 
-def new_timestamp():
-    # Creates a new timestamp with a specific format.
-    return datetime.now().strftime("%d/%m/%y - %H:%M:%S")
+class Cinner:
+    def __init__(self, json_file):
+        self.json_file = json_file
+        self.projects = self.load_data(json_file).get("projects", [])
+
+    def load_data(self, path):
+        """Reads the data from a JSON file."""
+        if not path or not os.path.exists(path):
+            return {"projects": []}
+        with open(path, "r") as f:
+            return json.load(f)
+
+    def save_data(self):
+        """Writes the data to a JSON file."""
+        with open(self.json_file, "w+") as f:
+            json.dump({"projects": self.projects}, f, indent=2)
+
+    def new_session(self):
+        """Creates a new working session dictionary."""
+        return {"start": self.current_timestamp(), "end": None}
+
+    def current_timestamp(self):
+        """Returns the current timestamp with a specific format."""
+        return datetime.now().strftime("%d/%m/%y - %H:%M:%S")
+
+    def get_project(self, project_name):
+        """Finds a specific project in the projects list."""
+        return next((p for p in self.projects if p["project_name"] == project_name), None)
+
+    def add_or_update_project(self, project_name):
+        """Creates a new project or adds a timestamp to an existing one."""
+        project = self.get_project(project_name)
+        if not project:
+            project = {"project_name": project_name, "sessions": [self.new_session()]}
+            self.projects.append(project)
+        else:
+            last_session = project["sessions"][-1]
+            if last_session["end"] is None:
+                last_session["end"] = self.current_timestamp()
+            else:
+                project["sessions"].append(self.new_session())
+        self.save_data()
+
+    def calculate_daily_hours(self, sessions, target_date):
+        """Calculate the total number of hours worked on a given day, considering overlaps."""
+        fmt = "%d/%m/%y - %H:%M:%S"
+        target_day = datetime.strptime(target_date, "%d/%m/%y").date()
+        intervals = []
+
+        for session in sessions:
+            start_time = datetime.strptime(session["start"], fmt)
+            end_time = datetime.strptime(session["end"], fmt) if session["end"] else datetime.now()
+
+            if start_time.date() <= target_day and end_time.date() >= target_day:
+                start_of_day = datetime.combine(target_day, datetime.min.time())
+                end_of_day = datetime.combine(target_day, datetime.max.time())
+
+                start_interval = max(start_time, start_of_day)
+                end_interval = min(end_time, end_of_day)
+
+                intervals.append((start_interval, end_interval))
+
+        intervals.sort()
+        merged_intervals = []
+        if intervals:
+            current_start, current_end = intervals[0]
+
+            for start, end in intervals[1:]:
+                if start <= current_end:
+                    current_end = max(current_end, end)
+                else:
+                    merged_intervals.append((current_start, current_end))
+                    current_start, current_end = start, end
+            merged_intervals.append((current_start, current_end))
+
+        total_time = timedelta()
+        for start, end in merged_intervals:
+            total_time += end - start
+
+        return timedelta(seconds=round(total_time.total_seconds()))
+
+    def assemble_total_hours_per_day(self, project_name):
+        """Assemble a list of total hours worked in each day."""
+        project = self.get_project(project_name)
+        if not project:
+            return []
+
+        fmt = "%d/%m/%y - %H:%M:%S"
+        all_dates = set()
+
+        for session in project["sessions"]:
+            start_time = datetime.strptime(session["start"], fmt)
+            end_time = datetime.strptime(session["end"], fmt) if session["end"] else datetime.now()
+
+            current_date = start_time.date()
+            while current_date <= end_time.date():
+                all_dates.add(current_date)
+                current_date += timedelta(days=1)
+
+        daily_hours = defaultdict(timedelta)
+        for date in sorted(all_dates):
+            total_time = self.calculate_daily_hours(project["sessions"], date.strftime("%d/%m/%y"))
+            daily_hours[date] = total_time
+
+        return [(date, daily_hours[date]) for date in sorted(daily_hours)]
+
+    def calculate_total_hours(self, project_name):
+        """Calculate the total hours worked for a project."""
+        daily_totals = self.assemble_total_hours_per_day(project_name)
+        total_time = sum((hours for _, hours in daily_totals), timedelta())
+        return timedelta(seconds=round(total_time.total_seconds()))
+
+    def print_daily_report(self, project_name):
+        """Generate and print a daily report of hours worked per day."""
+        daily_totals = self.assemble_total_hours_per_day(project_name)
+        print("\n=== Daily Hours Report ===")
+        for date, total_time in daily_totals:
+            total_hours = total_time.total_seconds() / 3600
+            print(f"Total hours worked on {date}: {total_hours:.2f} hours")
+        print("==========================")
+
+    def print_total_report(self, project_name):
+        """Print a report with the total hours worked for a project."""
+        total_hours = self.calculate_total_hours(project_name).total_seconds() / 3600
+        print(f"\nTotal hours worked on '{project_name}': {total_hours:.2f} hours for ${125.0*total_hours:.2f}")
 
 
-def new_session():
-    # Creates a new working session dictionary.
-    return {"start": new_timestamp(), "end": None}
-
-
-def get_project(project, data):
-    # Returns a specific project from the data dictionary.
-    for p in data.get("projects"):
-        if p.get("project_name") == project:
-            return p
-
-
-def create_project(project_name, data=None):
-    # Creates a new project dictionary and adds it to the data dictionary.
-    data = data or {"projects": []}
-    data.get("projects").append({
-            "project_name": project_name,
-            "sessions": [new_session()],
-        })
-    return data
-
-
-def update_project(project, data):
-    # Replaces an existing project dicionary with a new one.
-    for i, p in enumerate(data.get("projects")):
-        if p.get("project_name") == project.get("project_name"):
-            data.get("projects")[i] = project
-            break
-    return data
-
-
-def is_dir(path):
-    # Returns True if path has no extension
-    return len(os.path.basename(path).split('.')) == 1
-
-
-def is_valid_path(path):
-    # Returns True if `path` is a directory or if has .json extension.
-    return is_dir(path) or os.path.basename(path).endswith('.json')
-
-
-def append_filename_to_path(path, default_name="data.json"):
-    if is_dir(path):
-        path = path if not path.endswith('/') else path[:-1]
-        return f"{path}/{default_name}"
-    return path
+from .plot import TimesheetPlotter
 
 
 def create_data_file(path):
@@ -87,147 +164,21 @@ def create_data_file(path):
         return path
 
 
-def save_data(data, path):
-    # Writes the data dictionary in a JSON file.
-    with open(path, "w+") as f:
-        json.dump(data, f, indent=2)
+def is_dir(path):
+    """Returns True if path has no extension."""
+    return len(os.path.basename(path).split('.')) == 1
 
 
-def load_data(path):
-    # Reads the data from a JSON file
-    f = open(path, "r")
-    data = json.loads(f.read())
-    f.close()
-    return data
+def is_valid_path(path):
+    """Returns True if `path` is a directory or if has .json extension."""
+    return is_dir(path) or os.path.basename(path).endswith('.json')
 
 
-def has_ongoing_sessions(project_name, data):
-    # Returns True if the data structure has
-    # ongoing sessions for a given project.
-    # Otherwise, returns False.
-    ongoing = False
-    for p in data.get("projects"):
-        if p.get("project_name") == project_name:
-            for s in p.get("sessions"):
-                if s.get("end") is None:
-                    ongoing = True
-    return ongoing
-
-
-def get_last_session_timedelta(project_name, data):
-    # Returns timedelta and True if the last session is ongoing.
-    # Otherwise, returns False.
-    p = get_project(project_name, data)
-    if p:
-        last_session = p.get("sessions")[-1]
-        start = format_date(last_session.get("start"))
-        if last_session.get("end") is not None:
-            end = format_date(last_session.get("end"))
-            return end - start, False
-        else:
-            end = datetime.now()
-            return end - start, True
-    else:
-        return '0:00:00', False
-
-
-def get_project_names(data):
-    # Returns a list with the names of all the projects.
-    return [p.get("project_name") for p in data.get("projects")]
-
-
-def get_total_timedelta(project_name, data):
-    # Returns the total time spent working in a project.
-    total = calculate_total(project_name, data)
-    if total:
-        return total.get("completed_sessions")
-    else:
-        return '0:00:00'
-
-
-def add_timestamp(project):
-    # Adds a new timestamp to a project (start/end).
-    last_session = project.get("sessions")[-1]
-    if last_session.get("start") and last_session.get("end"):
-        project.get("sessions").append(new_session())
-    elif not last_session.get("end"):
-        last_session.update({"end": new_timestamp()})
-    return project
-
-
-def format_date(timestamp):
-    # Applies a specific format to a date object.
-    return datetime.strptime(timestamp, "%d/%m/%y - %H:%M:%S")
-
-
-def sum_deltas(deltas):
-    # Sumarize the timedeltas in a list of deltas.
-    initial = timedelta(days=0, hours=0, minutes=0, seconds=0)
-    return reduce(lambda d1, d2: d1+d2, deltas, initial)
-
-
-def get_report(project_name, data):
-    # Prints a report for a specific project.
-    total = calculate_total(project_name, data)
-    if total:
-        rate = 125.00
-        total_hours = total.get('completed_sessions').total_seconds() / 3600
-        if total['ongoing_delta']:
-            ongoing = total['ongoing_delta'].total_seconds() / 3600
-        else:
-            ongoing = 0.0
-        all_hours = round(((total_hours + ongoing) * 100) / 100, 2)
-        total_combined = rate * all_hours
-        print(f"Time spent working on '{project_name}': {all_hours}")
-        # print(total.get('completed_sessions'))
-        print(f"Ongoing sessions: {total['ongoing_sessions']}")
-        print(f"Time spent in ongoing session: {total['ongoing_delta']}")
-        print(f"Invoice amount: ${rate}/hour * ({total_hours} hours + {ongoing} hours) = ${total_combined}")  # noqa:E501
-    else:
-        print(f"Project '{project_name}' was not found in data file")
-
-
-def calculate_total(project_name, data):
-    # Calculates the total time spent working in a project.
-    projects = data.get("projects")
-    project_found = False
-    for i, p in enumerate(projects):
-        if p.get("project_name") == project_name:
-            project_found = True
-            proj = data.get("projects")[i]
-            deltas = []
-            ongoing = False
-            ongoing_delta = 0
-            print()
-            print("=== Work log ===")
-            for s in proj.get("sessions"):
-                if s.get("end") is not None:
-                    start = format_date(s.get("start"))
-                    end = format_date(s.get("end"))
-                    delta = end - start
-                    print(f"{delta} on {end}")
-                    deltas.append(delta)
-                else:
-                    ongoing = True
-                    time_ongoing = datetime.now()
-                    ongoing_delta = time_ongoing - format_date(s.get("start"))
-            print("================")
-            return {
-                'completed_sessions': sum_deltas(deltas),
-                'ongoing_sessions': ongoing,
-                'ongoing_delta': ongoing_delta
-            }
-    if not project_found:
-        return None
-
-
-def get_project_index(project_name, data):
-    # Returns project index in data file or -1 if not found.
-    res = -1
-    for idx, p in enumerate(data["projects"]):
-        if p["project_name"] == project_name:
-            res = idx
-    return res
+def append_filename_to_path(path, default_name="data.json"):
+    if is_dir(path):
+        path = path if not path.endswith('/') else path[:-1]
+        return f"{path}/{default_name}"
+    return path
 
 
 def main():
@@ -245,29 +196,39 @@ def main():
         help="Calculate and display a report of the time spent in the project",
         action="store_true"
     )
+    parser.add_argument(
+        "-d",
+        "--daily-report",
+        help="Generate a daily report of hours worked per day in the project",
+        action="store_true"
+    )
+    parser.add_argument(
+        "-P",
+        "--plot",
+        help="Graph the time spent in the project",
+        action="store_true",
+    )
     args = parser.parse_args()
     project = args.project
     path = args.path
     report = args.report
+    daily_report = args.daily_report
+    plot = args.plot
+
     if project and is_valid_path(path):
         path = create_data_file(path)
-        data = load_data(path)
-        if not data:
-            data = create_project(project)
+        tracker = Cinner(path)
 
         if report:
-            get_report(project, data)
+            tracker.print_total_report(project)
+        elif daily_report or plot:
+            tracker.print_daily_report(project)
+            if plot:
+                plotter = TimesheetPlotter(path, project)
+                plotter.plot_daily_totals()
         else:
-            p = get_project(project, data)
-            if p:
-                p = add_timestamp(p)
-                data = update_project(p, data)
-            else:
-                data = create_project(project, data)
+            tracker.add_or_update_project(project)
 
-            save_data(data, path)
-            print(f"working on \'{project}\'")
-            print(data)
     else:
         print("Project or path not valid")
 
