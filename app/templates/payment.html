@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment</title>
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+    <h1>Enter Payment Details</h1>
+    <form id="payment-form">
+        <div id="card-element"></div>
+        <button type="submit">Submit Payment</button>
+    </form>
+    <script>
+        const stripe = Stripe('pk_test_your_publishable_key');
+        const elements = stripe.elements();
+        const cardElement = elements.create('card');
+        cardElement.mount('#card-element');
+
+        const form = document.getElementById('payment-form');
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const {paymentMethod, error} = await stripe.createPaymentMethod({
+                type: 'card',
+                card: cardElement,
+            });
+
+            if (error) {
+                console.error(error);
+            } else {
+                // Send paymentMethod.id to your server for attaching
+                fetch('/attach-payment-method', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({paymentMethodId: paymentMethod.id}),
+                }).then((response) => {
+                    if (response.ok) return response.json();
+                    return response.json().then((json) => Promise.reject(json));
+                }).then((result) => {
+                    // Handle successful attachment
+                    console.log(result);
+                }).catch((error) => {
+                    console.error(error);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+Flask
+Flask-SQLAlchemy
+Flask-Login
+Flask-Mail
+stripe
+python-dotenv
+Authlib
+requests
+matplotlib
+pandas

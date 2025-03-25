@@ -1,0 +1,4 @@
+TF_VAR_namecheap_api_key=721752fec4fd48fb89780dc4f20f67f1
+TF_VAR_namecheap_api_user=willcharlton
+AWS_PROFILE=wce
+LINODE_TOKEN=a3c61ea086c9c82f781193736ec3ff6e9aa6ea37dbbbe5d43ee3ef0287bb270b

@@ -1,0 +1,75 @@
+<!-- templates/project_report.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>{{ project_name }} - Time Report</title>
+</head>
+<body>
+    <header>
+        <h1>Time Report: {{ project_name }}</h1>
+        <nav>
+            <a href="{{ url_for('index') }}" class="nav-link">Back to Projects</a>
+            <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="messages">
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for message in messages %}
+                            <div class="flash-message">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+        </section>
+
+        <section class="report-summary">
+            <h2>Project Summary</h2>
+            <div class="summary-card">
+                <p class="total-hours">Total Hours: <span>{{ total_hours }}</span></p>
+                <p class="total-days">Days Tracked: <span>{{ daily_report|length }}</span></p>
+                {% if total_hours > 0 %}
+                <p class="hourly-rate">Total Amount ($125/hr): <span>${{ (total_hours * 125)|round(2) }}</span></p>
+                {% endif %}
+            </div>
+        </section>
+
+        <section class="report-table">
+            <h2>Daily Hours Breakdown</h2>
+            {% if daily_report %}
+                <table class="hours-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Hours</th>
+                            <th>Amount ($125/hr)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for day in daily_report %}
+                            <tr>
+                                <td>{{ day.date }}</td>
+                                <td>{{ day.hours }}</td>
+                                <td>${{ (day.hours * 125)|round(2) }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="no-data">No time tracking data available for this project.</p>
+            {% endif %}
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; {{ now.year if now is defined else 2025 }} Presis Time Tracker</p>
+    </footer>
+</body>
+</html>

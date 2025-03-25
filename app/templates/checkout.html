@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout</title>
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+    <h1>Subscribe to Presis</h1>
+    <button id="checkout-button">Checkout</button>
+    <script>
+        const stripe = Stripe('pk_test_your_publishable_key');
+        document.getElementById('checkout-button').addEventListener('click', () => {
+            stripe.redirectToCheckout({
+                sessionId: '{{ session_id }}'
+            }).then((result) => {
+                if (result.error) {
+                    alert(result.error.message);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

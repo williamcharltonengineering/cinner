@@ -1,0 +1,106 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>Presis - Time Tracking</title>
+</head>
+<body>
+    <header>
+        <h1>Presis Time Tracker</h1>
+        <nav>
+            <a href="{{ url_for('invite') }}" class="nav-link">Invite Members</a>
+            {% if current_user.is_admin %}
+            <a href="{{ url_for('admin') }}" class="nav-link">Admin Panel</a>
+            {% endif %}
+            <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="messages">
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for message in messages %}
+                            <div class="flash-message">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+        </section>
+
+        <section class="create-project">
+            <h2>Create New Project</h2>
+            <form action="{{ url_for('create_project') }}" method="post">
+                <div class="form-group">
+                    <label for="project_name">Project Name:</label>
+                    <input type="text" id="project_name" name="project_name" required>
+                </div>
+                <div class="form-group">
+                    <label for="comment">Initial Comment:</label>
+                    <input type="text" id="comment" name="comment">
+                </div>
+                <button type="submit" class="btn">Create & Start Tracking</button>
+            </form>
+        </section>
+
+        <section class="projects">
+            <h2>Your Projects</h2>
+            {% if projects %}
+                <div class="projects-list">
+                    {% for project in projects %}
+                        <div class="project-card {% if project.project_name == active_project %}active{% endif %}">
+                            <h3>{{ project.project_name }}</h3>
+                            
+                            <div class="project-stats">
+                                <p>Sessions: {{ project.sessions|length }}</p>
+                                
+                                {% if project.sessions %}
+                                    {% set last_session = project.sessions[-1] %}
+                                    <p>
+                                        {% if last_session.end is none %}
+                                            <span class="status active">Active since {{ last_session.start }}</span>
+                                        {% else %}
+                                            <span class="status inactive">Inactive</span>
+                                        {% endif %}
+                                    </p>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="project-actions">
+                                <form action="{{ url_for('toggle_project', project_name=project.project_name) }}" method="post">
+                                    {% if project.project_name == active_project %}
+                                        <div class="form-group">
+                                            <label for="comment-{{ loop.index }}">Closing Comment:</label>
+                                            <input type="text" id="comment-{{ loop.index }}" name="comment">
+                                        </div>
+                                        <button type="submit" class="btn stop">Stop Tracking</button>
+                                    {% else %}
+                                        <div class="form-group">
+                                            <label for="comment-{{ loop.index }}">Starting Comment:</label>
+                                            <input type="text" id="comment-{{ loop.index }}" name="comment">
+                                        </div>
+                                        <button type="submit" class="btn start">Start Tracking</button>
+                                    {% endif %}
+                                </form>
+                                
+                                <a href="{{ url_for('project_report', project_name=project.project_name) }}" class="btn report">View Report</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="no-projects">No projects yet. Create your first project to start tracking time!</p>
+            {% endif %}
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; {{ now.year }} Presis Time Tracker</p>
+    </footer>
+</body>
+</html>
