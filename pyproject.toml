@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "cinner"
+name = "presis"
 version = "1.0.1"
-description = "cinner is a (pronounced check-in-er) is a multitool for keeping track of time-based projects."
+description = "presis is a (pronounced check-in-er) is a multitool for keeping track of time-based projects."
 license = "MIT"
 authors = [
     "williamcharltonengineering <will@williamcharltonengineering.com>"
@@ -9,8 +9,8 @@ authors = [
 
 readme = 'README.md'
 
-repository = "https://github.com/williamcharltonengineering/cinner"
-homepage = "https://github.com/williamcharltonengineering/cinner"
+repository = "https://github.com/williamcharltonengineering/presis"
+homepage = "https://github.com/williamcharltonengineering/presis"
 
 keywords = ['time', 'tracking', 'productivity', 'time tracking', 'reporting']
 
@@ -19,4 +19,4 @@ python = "^3.6"
 toml = "^0.9"
 
 [tool.poetry.scripts]
-cinner = 'cinner:main'
+presis = 'presis:main'

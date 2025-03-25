@@ -208,13 +208,46 @@ def project_report(project_name):
     # Get daily hours
     daily_hours = time_tracker.assemble_total_hours_per_day(project_name)
     
+    # Get all sessions for the project
+    sessions = project['sessions']
+    
+    # Group sessions by date
+    sessions_by_date = {}
+    for session in sessions:
+        start_date = datetime.strptime(session['start'], "%d/%m/%y - %H:%M:%S").date()
+        
+        # Handle sessions that span multiple days
+        if session['end'] is not None:
+            end_date = datetime.strptime(session['end'], "%d/%m/%y - %H:%M:%S").date()
+            current_date = start_date
+            while current_date <= end_date:
+                date_str = current_date.strftime('%Y-%m-%d')
+                if date_str not in sessions_by_date:
+                    sessions_by_date[date_str] = []
+                
+                # Add session to this date
+                sessions_by_date[date_str].append(session)
+                current_date += timedelta(days=1)
+        else:
+            # For active sessions
+            date_str = start_date.strftime('%Y-%m-%d')
+            if date_str not in sessions_by_date:
+                sessions_by_date[date_str] = []
+            sessions_by_date[date_str].append(session)
+    
     # Format for display
     daily_report = []
     for date, hours in daily_hours:
+        date_str = date.strftime('%Y-%m-%d')
         hours_decimal = hours.total_seconds() / 3600
+        
+        # Get sessions for this date
+        date_sessions = sessions_by_date.get(date_str, [])
+        
         daily_report.append({
-            'date': date.strftime('%Y-%m-%d'),
-            'hours': round(hours_decimal, 2)
+            'date': date_str,
+            'hours': round(hours_decimal, 2),
+            'sessions': date_sessions
         })
     
     # Calculate total hours
@@ -224,7 +257,8 @@ def project_report(project_name):
         'project_report.html', 
         project_name=project_name, 
         daily_report=daily_report, 
-        total_hours=round(total_hours, 2)
+        total_hours=round(total_hours, 2),
+        project=project
     )
 
 @app.route('/login', methods=['GET', 'POST'])

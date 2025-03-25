@@ -1,63 +1,63 @@
 import os
 import json
 import pytest
-from ..cinner import Cinner
+from ..presis import Presis
 from datetime import datetime, timedelta
 from collections import defaultdict
 
 
 def test_1hour_timesheet_entries():
     test_file = os.path.join(os.path.dirname(__file__), 'assets', 'test_1_hour.json')
-    cinner = Cinner(test_file)
-    entries = cinner.load_data(test_file)
+    presis = Presis(test_file)
+    entries = presis.load_data(test_file)
     # print(entries)
     assert len(entries) == 1
     assert entries['projects'][0]['project_name'] == "1hour"
-    # assert cinner.has_ongoing_sessions("1hour") == False
-    # assert cinner.get_total_timedelta("1hour") == timedelta(seconds=3600)
-    assert cinner.calculate_total_hours("1hour") == timedelta(seconds=3600)
-    assert cinner.calculate_total_hours("1hour").total_seconds() / 3600 == 1
+    # assert presis.has_ongoing_sessions("1hour") == False
+    # assert presis.get_total_timedelta("1hour") == timedelta(seconds=3600)
+    assert presis.calculate_total_hours("1hour") == timedelta(seconds=3600)
+    assert presis.calculate_total_hours("1hour").total_seconds() / 3600 == 1
 
 def test_2hour_timesheet_entries():
     test_file = os.path.join(os.path.dirname(__file__), 'assets', 'test_2_hour.json')
-    cinner = Cinner(test_file)
-    entries = cinner.load_data(test_file)
+    presis = Presis(test_file)
+    entries = presis.load_data(test_file)
     # print(entries)
     assert len(entries) == 1
     assert entries['projects'][0]['project_name'] == "2hour"
-    # assert cinner.has_ongoing_sessions("2hour") == False
-    # assert cinner.get_total_timedelta("2hour") == timedelta(seconds=7200)
-    assert cinner.calculate_total_hours("2hour") == timedelta(seconds=7200)
-    assert cinner.calculate_total_hours("2hour").total_seconds() / 3600 == 2
+    # assert presis.has_ongoing_sessions("2hour") == False
+    # assert presis.get_total_timedelta("2hour") == timedelta(seconds=7200)
+    assert presis.calculate_total_hours("2hour") == timedelta(seconds=7200)
+    assert presis.calculate_total_hours("2hour").total_seconds() / 3600 == 2
 
 def test_daily_total_timesheet_entries():
     test_file = os.path.join(os.path.dirname(__file__), 'assets', 'test_daily_total.json')
-    cinner = Cinner(test_file)
-    entries = cinner.load_data(test_file)
+    presis = Presis(test_file)
+    entries = presis.load_data(test_file)
     # print(entries)
     assert len(entries) == 1
     assert entries['projects'][0]['project_name'] == "daily_total"
-    # assert cinner.has_ongoing_sessions("daily_total") == False
-    # assert cinner.get_total_timedelta("daily_total") == timedelta(seconds=21599, microseconds=999997)
-    assert cinner.calculate_total_hours("daily_total") == timedelta(seconds=21600)
-    assert cinner.calculate_total_hours("daily_total").total_seconds() / 3600 == pytest.approx(6, abs=0.01)
-    daily = cinner.assemble_total_hours_per_day("daily_total")
+    # assert presis.has_ongoing_sessions("daily_total") == False
+    # assert presis.get_total_timedelta("daily_total") == timedelta(seconds=21599, microseconds=999997)
+    assert presis.calculate_total_hours("daily_total") == timedelta(seconds=21600)
+    assert presis.calculate_total_hours("daily_total").total_seconds() / 3600 == pytest.approx(6, abs=0.01)
+    daily = presis.assemble_total_hours_per_day("daily_total")
     # print(daily)
     assert daily
 
 def test_late_night_timesheet_entries():
     test_file = os.path.join(os.path.dirname(__file__), 'assets', 'test_late_night.json')
     print(f'starting test with file: {test_file}')
-    cinner = Cinner(test_file)
-    entries = cinner.load_data(test_file)
+    presis = Presis(test_file)
+    entries = presis.load_data(test_file)
     print(entries)
     assert len(entries) == 1
     assert entries['projects'][0]['project_name'] == "late_night"
-    # assert cinner.has_ongoing_sessions("late_night") == False
-    # assert cinner.get_total_timedelta("late_night") == timedelta(seconds=21599)
-    # assert cinner.calculate_total("late_night") == timedelta(seconds=21599)
-    # assert cinner.calculate_total("late_night").total_seconds() / 3600 == 6
-    daily = cinner.assemble_total_hours_per_day("late_night")
+    # assert presis.has_ongoing_sessions("late_night") == False
+    # assert presis.get_total_timedelta("late_night") == timedelta(seconds=21599)
+    # assert presis.calculate_total("late_night") == timedelta(seconds=21599)
+    # assert presis.calculate_total("late_night").total_seconds() / 3600 == 6
+    daily = presis.assemble_total_hours_per_day("late_night")
     print(daily)
     assert daily
     
