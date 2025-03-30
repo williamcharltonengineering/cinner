@@ -1,35 +1,39 @@
-
-import os
 import json
 from datetime import datetime, timedelta
-from functools import reduce
 from collections import defaultdict
+from presis.redis_backend import RedisBackend
 
-
-class TimeTracker:
-    def __init__(self, json_file):
-        self.json_file = json_file
-        self.projects = self.load_data(json_file).get("projects", [])
-
-    def load_data(self, path):
-        """Reads the data from a JSON file."""
-        if not path or not os.path.exists(path):
-            return {"projects": []}
-        with open(path, "r") as f:
-            return json.load(f)
-
+class RedisTimeTracker:
+    """Redis-based implementation of TimeTracker that stores data in Redis instead of the filesystem"""
+    
+    def __init__(self, user_id, redis_backend):
+        self.user_id = user_id
+        self.redis = redis_backend
+        self._projects = None  # Cache projects in memory
+        
+    @property
+    def projects(self):
+        """Get all projects for this user from Redis"""
+        if self._projects is None:
+            # Get all projects for this user
+            raw_data = self.redis.r.get(f"timesheet:user:{self.user_id}")
+            if raw_data:
+                data = json.loads(raw_data)
+                self._projects = data.get("projects", [])
+            else:
+                self._projects = []
+        return self._projects
+        
     def save_data(self):
-        """Writes the data to a JSON file."""
-        with open(self.json_file, "w+") as f:
-            json.dump({"projects": self.projects}, f, indent=2)
-
+        """Save the projects data to Redis"""
+        self.redis.r.set(f"timesheet:user:{self.user_id}", json.dumps({"projects": self._projects}))
+        
     def new_session(self, comment=None):
         """Creates a new working session dictionary with an optional comment."""
         tm = self.current_timestamp()
-        print(f'starting new session at: {tm}')
         if comment is None:
-            comment = input("Enter a comment for this new session: ")
-        return { "start": tm, "end": None, "comment": comment }
+            comment = ""
+        return {"start": tm, "end": None, "comment": comment}
 
     def current_timestamp(self):
         """Returns the current timestamp with a specific format."""
@@ -44,16 +48,14 @@ class TimeTracker:
         project = self.get_project(project_name)
         if not project:
             project = {"project_name": project_name, "sessions": [self.new_session(comment)]}
-            print(f'creating project {project_name}')
             self.projects.append(project)
         else:
             last_session = project["sessions"][-1]
             if last_session["end"] is None:
                 last_session["end"] = self.current_timestamp()
                 if comment is None:
-                    comment = input("Enter a closing comment for this session: ")
+                    comment = ""
                 last_session["closing_comment"] = comment
-                print(f'ended session at: {last_session["end"]}')
             else:
                 project["sessions"].append(self.new_session(comment))
         self.save_data()

@@ -4,6 +4,26 @@
 - App site: `app.presis.pro`
 - Dev site: `dev.presis.pro`
 
+## Docker Container
+
+To run the app in a Docker container:
+
+```bash
+# Build the Docker image
+docker build -f infra/Dockerfile -t presis-app .
+
+# Run the container with custom admin credentials
+docker run -p 3000:3000 \
+  -e ADMIN_EMAIL=your_admin@example.com \
+  -e ADMIN_PASSWORD=your_password \
+  presis-app
+```
+
+The container will automatically create an admin user on startup if one doesn't exist yet.
+Default admin credentials (if not overridden):
+- Email: admin@example.com
+- Password: adminpassword
+
 ## App Development
 
 ```

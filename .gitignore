@@ -3,3 +3,10 @@ __pycache__/
 .venv/
 build/
 *\.egg-info/
+app/instance/*
+.DS_Store
+.terraform*
+*.log
+*.tfstate*
+terraform/prod/keys
+terraform/prod/ssl

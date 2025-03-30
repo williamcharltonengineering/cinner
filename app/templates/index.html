@@ -6,16 +6,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <!-- Add Flatpickr for date/time picking -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <title>Presis - Time Tracking</title>
 </head>
 <body>
     <header>
         <h1>Presis Time Tracker</h1>
         <nav>
-            <a href="{{ url_for('invite') }}" class="nav-link">Invite Members</a>
             {% if current_user.is_admin %}
-            <a href="{{ url_for('admin') }}" class="nav-link">Admin Panel</a>
+                <a href="{{ url_for('admin') }}" class="nav-link">Admin Panel</a>
             {% endif %}
+            <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
+            <a href="{{ url_for('invite') }}" class="nav-link">Invite Others</a>
             <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
         </nav>
     </header>
@@ -46,6 +50,39 @@
                 </div>
                 <button type="submit" class="btn">Create & Start Tracking</button>
             </form>
+        </section>
+
+        <section class="project-management">
+            <h2>Project Management</h2>
+            {% if projects and projects|length > 1 %}
+            <div class="merge-projects">
+                <h3>Merge Projects</h3>
+                <p>Merge all sessions from a source project into a destination project. The source project will be removed.</p>
+                <form action="{{ url_for('merge_projects') }}" method="post">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="source_project">Source Project:</label>
+                            <select id="source_project" name="source_project" required>
+                                <option value="">Select a source project</option>
+                                {% for project in projects %}
+                                    <option value="{{ project.project_name }}">{{ project.project_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="destination_project">Destination Project:</label>
+                            <select id="destination_project" name="destination_project" required>
+                                <option value="">Select a destination project</option>
+                                {% for project in projects %}
+                                    <option value="{{ project.project_name }}">{{ project.project_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn" onclick="return confirm('Are you sure you want to merge these projects? This action cannot be undone!');">Merge Projects</button>
+                </form>
+            </div>
+            {% endif %}
         </section>
 
         <section class="projects">
@@ -89,6 +126,47 @@
                                 </form>
                                 
                                 <a href="{{ url_for('project_report', project_name=project.project_name) }}" class="btn report">View Report</a>
+                                
+                                <button type="button" class="btn toggle-manual-entry" data-project="{{ project.project_name|replace(' ', '_') }}">Add Manual Entry</button>
+                                
+                                <div id="manual-entry-{{ project.project_name|replace(' ', '_') }}" class="manual-entry-form" style="display: none;">
+                                    <h4>Add Manual Time Entry</h4>
+                                    <form action="{{ url_for('add_manual_entry', project_name=project.project_name) }}" method="post">
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label for="start_date-{{ loop.index }}">Start Date:</label>
+                                                <input type="text" id="start_date-{{ loop.index }}" name="start_date" class="date-picker" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="start_time-{{ loop.index }}">Start Time:</label>
+                                                <input type="text" id="start_time-{{ loop.index }}" name="start_time" class="time-picker" required>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label for="end_date-{{ loop.index }}">End Date:</label>
+                                                <input type="text" id="end_date-{{ loop.index }}" name="end_date" class="date-picker" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="end_time-{{ loop.index }}">End Time:</label>
+                                                <input type="text" id="end_time-{{ loop.index }}" name="end_time" class="time-picker" required>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label for="manual_comment-{{ loop.index }}">Comment:</label>
+                                            <input type="text" id="manual_comment-{{ loop.index }}" name="comment">
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label for="closing_comment-{{ loop.index }}">Closing Comment:</label>
+                                            <input type="text" id="closing_comment-{{ loop.index }}" name="closing_comment">
+                                        </div>
+                                        
+                                        <button type="submit" class="btn">Add Entry</button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     {% endfor %}
@@ -102,5 +180,47 @@
     <footer>
         <p>&copy; {{ now.year }} Presis Time Tracker</p>
     </footer>
+    
+    <script>
+        // Initialize Flatpickr date and time pickers and set up event handlers
+        document.addEventListener('DOMContentLoaded', function() {
+            // Setup toggle manual entry buttons
+            const toggleButtons = document.querySelectorAll('.toggle-manual-entry');
+            toggleButtons.forEach(function(button) {
+                button.addEventListener('click', function() {
+                    const projectName = this.getAttribute('data-project');
+                    const form = document.getElementById(`manual-entry-${projectName}`);
+                    if (form) {
+                        if (form.style.display === 'none') {
+                            form.style.display = 'block';
+                        } else {
+                            form.style.display = 'none';
+                        }
+                    }
+                });
+            });
+            
+            // Initialize date pickers
+            const datePickers = document.querySelectorAll('.date-picker');
+            datePickers.forEach(function(picker) {
+                flatpickr(picker, {
+                    dateFormat: 'Y-m-d',
+                    defaultDate: 'today'
+                });
+            });
+            
+            // Initialize time pickers
+            const timePickers = document.querySelectorAll('.time-picker');
+            timePickers.forEach(function(picker) {
+                flatpickr(picker, {
+                    enableTime: true,
+                    noCalendar: true,
+                    dateFormat: 'H:i:S',
+                    time_24hr: true,
+                    defaultDate: new Date()
+                });
+            });
+        });
+    </script>
 </body>
 </html>

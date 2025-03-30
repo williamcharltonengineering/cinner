@@ -6,6 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <!-- Add Flatpickr for the calendar widget -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <!-- Add FullCalendar for the calendar view -->
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css' rel='stylesheet' />
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js'></script>
     <title>{{ project_name }} - Time Report</title>
 </head>
 <body>
@@ -41,8 +47,19 @@
             </div>
         </section>
 
+        <section class="report-calendar">
+            <h2>Calendar View</h2>
+            <div class="view-toggle">
+                <button id="month-view" class="btn view-btn active">Month</button>
+                <button id="week-view" class="btn view-btn">Week</button>
+                <button id="day-view" class="btn view-btn">Day</button>
+            </div>
+            <div id="calendar"></div>
+        </section>
+
         <section class="report-table">
-            <h2>Daily Hours Breakdown</h2>
+            <h2 class="collapsible">Daily Hours Breakdown <span class="toggle-icon">+</span></h2>
+            <div class="collapse-content" style="display: none;">
             {% if daily_report %}
                 <table class="hours-table">
                     <thead>
@@ -50,6 +67,7 @@
                             <th>Date</th>
                             <th>Hours</th>
                             <th>Amount ($125/hr)</th>
+                            <th>Comments</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -58,6 +76,23 @@
                                 <td>{{ day.date }}</td>
                                 <td>{{ day.hours }}</td>
                                 <td>${{ (day.hours * 125)|round(2) }}</td>
+                                <td>
+                                    {% if day.sessions %}
+                                        <ul class="session-comments">
+                                            {% for session in day.sessions %}
+                                                <li>
+                                                    <span class="time-range">{{ session.start }} {% if session.end %} - {{ session.end }}{% endif %}</span>:
+                                                    {% if session.comment %}
+                                                        <span class="comment">{{ session.comment }}</span>
+                                                    {% endif %}
+                                                    {% if session.closing_comment %}
+                                                        <span class="closing-comment">(Closing: {{ session.closing_comment }})</span>
+                                                    {% endif %}
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                </td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -65,11 +100,289 @@
             {% else %}
                 <p class="no-data">No time tracking data available for this project.</p>
             {% endif %}
+            </div>
         </section>
     </main>
+
+    <!-- Event Details Modal -->
+    <div id="eventModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Event Details</h3>
+            <div id="eventDetails">
+                <p><strong>Date:</strong> <span id="eventDate"></span></p>
+                <p><strong>Hours:</strong> <span id="eventHours"></span></p>
+                <p><strong>Time Range:</strong> <span id="eventTimeRange"></span></p>
+                <div id="commentContainer">
+                    <p><strong>Comment:</strong> <span id="eventComment"></span></p>
+                </div>
+                <div id="closingCommentContainer">
+                    <p><strong>Closing Comment:</strong> <span id="eventClosingComment"></span></p>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button id="editEventBtn" class="btn">Edit Event</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Event Modal -->
+    <div id="createEventModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Add Time Entry</h3>
+            <form id="createEventForm" action="{{ url_for('add_manual_entry', project_name=project_name) }}" method="post">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="start_date">Start Date:</label>
+                        <input type="text" id="start_date" name="start_date" class="date-picker" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="start_time">Start Time:</label>
+                        <input type="text" id="start_time" name="start_time" class="time-picker" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="end_date">End Date:</label>
+                        <input type="text" id="end_date" name="end_date" class="date-picker" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="end_time">End Time:</label>
+                        <input type="text" id="end_time" name="end_time" class="time-picker" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="comment">Comment:</label>
+                    <input type="text" id="comment" name="comment">
+                </div>
+                <div class="form-group">
+                    <label for="closing_comment">Closing Comment:</label>
+                    <input type="text" id="closing_comment" name="closing_comment">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn">Save Entry</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Event Modal -->
+    <div id="editEventModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Edit Time Entry</h3>
+            <form id="editEventForm" action="{{ url_for('edit_manual_entry', project_name=project_name) }}" method="post">
+                <input type="hidden" id="edit_event_id" name="event_id">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit_start_date">Start Date:</label>
+                        <input type="text" id="edit_start_date" name="start_date" class="date-picker" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_start_time">Start Time:</label>
+                        <input type="text" id="edit_start_time" name="start_time" class="time-picker" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit_end_date">End Date:</label>
+                        <input type="text" id="edit_end_date" name="end_date" class="date-picker" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_end_time">End Time:</label>
+                        <input type="text" id="edit_end_time" name="end_time" class="time-picker" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="edit_comment">Comment:</label>
+                    <input type="text" id="edit_comment" name="comment">
+                </div>
+                <div class="form-group">
+                    <label for="edit_closing_comment">Closing Comment:</label>
+                    <input type="text" id="edit_closing_comment" name="closing_comment">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn">Update Entry</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <footer>
         <p>&copy; {{ now.year if now is defined else 2025 }} Presis Time Tracker</p>
     </footer>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get modal elements
+            const eventModal = document.getElementById('eventModal');
+            const createEventModal = document.getElementById('createEventModal');
+            const editEventModal = document.getElementById('editEventModal');
+            
+            // Get close buttons
+            const closeButtons = document.querySelectorAll('.close');
+            closeButtons.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    eventModal.style.display = 'none';
+                    createEventModal.style.display = 'none';
+                    editEventModal.style.display = 'none';
+                });
+            });
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', function(event) {
+                if (event.target === eventModal) {
+                    eventModal.style.display = 'none';
+                }
+                if (event.target === createEventModal) {
+                    createEventModal.style.display = 'none';
+                }
+                if (event.target === editEventModal) {
+                    editEventModal.style.display = 'none';
+                }
+            });
+            
+            // Get edit button
+            const editEventBtn = document.getElementById('editEventBtn');
+            editEventBtn.addEventListener('click', function() {
+                // Get event data
+                const date = document.getElementById('eventDate').textContent;
+                const hours = document.getElementById('eventHours').textContent;
+                const timeRange = document.getElementById('eventTimeRange').textContent;
+                const comment = document.getElementById('eventComment').textContent;
+                const closingComment = document.getElementById('eventClosingComment').textContent;
+                
+                // Populate edit form
+                document.getElementById('edit_start_date').value = date;
+                document.getElementById('edit_comment').value = comment;
+                document.getElementById('edit_closing_comment').value = closingComment;
+                
+                // Hide event modal and show edit modal
+                eventModal.style.display = 'none';
+                editEventModal.style.display = 'block';
+            });
+            
+            // Use the calendar events provided by the backend
+            const events = {{ calendar_events_json|safe }};
+            
+            // Initialize the FullCalendar
+            const calendarEl = document.getElementById('calendar');
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: ''
+                },
+                height: 'auto',
+                events: events,
+                selectable: true,
+                eventClick: function(info) {
+                    // Populate event modal with data
+                    document.getElementById('eventDate').textContent = info.event.extendedProps.date;
+                    document.getElementById('eventHours').textContent = info.event.extendedProps.hours;
+                    document.getElementById('eventTimeRange').textContent = info.event.extendedProps.timeRange;
+                    
+                    const commentContainer = document.getElementById('commentContainer');
+                    const comment = document.getElementById('eventComment');
+                    comment.textContent = info.event.extendedProps.comment;
+                    
+                    const closingCommentContainer = document.getElementById('closingCommentContainer');
+                    const closingComment = document.getElementById('eventClosingComment');
+                    closingComment.textContent = info.event.extendedProps.closingComment;
+                    
+                    // Show/hide comment containers based on content
+                    if (info.event.extendedProps.comment) {
+                        commentContainer.style.display = 'block';
+                    } else {
+                        commentContainer.style.display = 'none';
+                    }
+                    
+                    if (info.event.extendedProps.closingComment) {
+                        closingCommentContainer.style.display = 'block';
+                    } else {
+                        closingCommentContainer.style.display = 'none';
+                    }
+                    
+                    // Show the modal
+                    eventModal.style.display = 'block';
+                },
+                dateClick: function(info) {
+                    // Set the date in the create event form
+                    document.getElementById('start_date').value = info.dateStr;
+                    document.getElementById('end_date').value = info.dateStr;
+                    
+                    // Show the create event modal
+                    createEventModal.style.display = 'block';
+                    
+                    // Initialize flatpickr for the date and time pickers
+                    initFlatpickr();
+                }
+            });
+            
+            calendar.render();
+            
+            // Set up view toggle buttons
+            document.getElementById('month-view').addEventListener('click', function() {
+                calendar.changeView('dayGridMonth');
+                setActiveViewButton(this);
+            });
+            
+            document.getElementById('week-view').addEventListener('click', function() {
+                calendar.changeView('timeGridWeek');
+                setActiveViewButton(this);
+            });
+            
+            document.getElementById('day-view').addEventListener('click', function() {
+                calendar.changeView('timeGridDay');
+                setActiveViewButton(this);
+            });
+            
+            function setActiveViewButton(activeButton) {
+                document.querySelectorAll('.view-btn').forEach(function(btn) {
+                    btn.classList.remove('active');
+                });
+                activeButton.classList.add('active');
+            }
+            
+            // Initialize flatpickr date/time pickers
+            function initFlatpickr() {
+                // Date pickers
+                flatpickr('.date-picker', {
+                    dateFormat: 'Y-m-d',
+                    defaultDate: 'today'
+                });
+                
+                // Time pickers
+                flatpickr('.time-picker', {
+                    enableTime: true,
+                    noCalendar: true,
+                    dateFormat: 'H:i:S',
+                    time_24hr: true,
+                    defaultDate: new Date()
+                });
+            }
+            
+            // Call initFlatpickr on page load
+            initFlatpickr();
+            
+            // Set up collapsible sections
+            const collapsibles = document.querySelectorAll('.collapsible');
+            collapsibles.forEach(function(collapsible) {
+                collapsible.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                    const content = this.nextElementSibling;
+                    if (content.style.display === "block") {
+                        content.style.display = "none";
+                        this.querySelector('.toggle-icon').textContent = '+';
+                    } else {
+                        content.style.display = "block";
+                        this.querySelector('.toggle-icon').textContent = '-';
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>

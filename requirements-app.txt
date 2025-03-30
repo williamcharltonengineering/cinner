@@ -8,3 +8,5 @@ Authlib
 requests
 matplotlib
 pandas
+pytest
+redis

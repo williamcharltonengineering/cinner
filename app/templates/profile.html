@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>User Profile - Presis</title>
+</head>
+<body>
+    <header>
+        <h1>User Profile</h1>
+        <nav>
+            <a href="{{ url_for('index') }}" class="nav-link">Back to Projects</a>
+            <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="messages">
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for message in messages %}
+                            <div class="flash-message">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+        </section>
+
+        <section class="profile-details">
+            <h2>Account Information</h2>
+            <div class="user-info">
+                <p><strong>Email:</strong> {{ current_user.email }}</p>
+                <p><strong>Account Type:</strong> {{ 'Premium' if current_user.has_paid_plan else 'Free' }}</p>
+                <p><strong>Admin Status:</strong> {{ 'Yes' if current_user.is_admin else 'No' }}</p>
+            </div>
+            
+            <div class="account-actions">
+                {% if current_user.has_paid_plan %}
+                <form action="{{ url_for('cancel_subscription') }}" method="post" onsubmit="return confirm('Are you sure you want to cancel your subscription? You will lose access to premium features.');">
+                    <button type="submit" class="btn btn-warning">Cancel Subscription</button>
+                </form>
+                {% endif %}
+                
+                <form action="{{ url_for('delete_account') }}" method="post" onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently deleted.');">
+                    <button type="submit" class="btn btn-danger">Delete Account</button>
+                </form>
+            </div>
+        </section>
+
+        <section class="api-token">
+            <h2>API Token</h2>
+            <p>Your API token is used for CLI integration. You can generate a new token, but this will invalidate any previous token.</p>
+            
+            {% if current_user.api_token %}
+                <div class="token-display">
+                    <p><strong>Your API Token:</strong></p>
+                    <pre class="token">{{ current_user.api_token }}</pre>
+                </div>
+            {% else %}
+                <p>You don't have an API token yet. Generate one to use the CLI integration.</p>
+            {% endif %}
+            
+            <form action="{{ url_for('generate_api_token') }}" method="post" class="token-form">
+                <button type="submit" class="btn">Generate New Token</button>
+            </form>
+        </section>
+
+        <section class="cli-instructions">
+            <h2>CLI Integration Instructions</h2>
+            <div class="instructions-card">
+                <h3>Setup</h3>
+                <ol>
+                    <li>Make sure you have the latest version of the Presis CLI</li>
+                    <li>Set the server URL (if not using the default):
+                        <pre>presis --set-server {{ request.host_url }}</pre>
+                    </li>
+                    <li>Login to authenticate:
+                        <pre>presis --login</pre>
+                        Enter your email and password when prompted.
+                    </li>
+                </ol>
+
+                <h3>Usage</h3>
+                <ul>
+                    <li>Start time tracking for a project:
+                        <pre>presis project-name</pre>
+                    </li>
+                    <li>Stop time tracking for a project:
+                        <pre>presis project-name</pre>
+                    </li>
+                    <li>Start with a comment:
+                        <pre>presis project-name -c "Working on feature X"</pre>
+                    </li>
+                    <li>Generate a report:
+                        <pre>presis project-name -r</pre>
+                    </li>
+                    <li>Sync data with the server:
+                        <pre>presis --sync</pre>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; {{ now.year if now is defined else 2025 }} Presis Time Tracker</p>
+    </footer>
+</body>
+</html>

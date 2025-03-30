@@ -4,14 +4,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invite - Presis</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>Invite Members - Presis</title>
 </head>
 <body>
-    <h1>Invite Members</h1>
-    <form method="post">
-        <label>Email</label>
-        <input type="email" name="email" required>
-        <button type="submit">Send Invitation</button>
-    </form>
+    <header>
+        <h1>Presis Time Tracker</h1>
+        <nav>
+            <a href="{{ url_for('index') }}" class="nav-link">Dashboard</a>
+            <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
+            <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="messages">
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for message in messages %}
+                            <div class="flash-message">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+        </section>
+
+        <section class="invite-section">
+            <h2>Invite Team Members</h2>
+            <p>Invite colleagues to join Presis and track their time on projects.</p>
+            
+            <form method="post" class="invite-form">
+                <div class="form-group">
+                    <label for="email">Email Address:</label>
+                    <input type="email" id="email" name="email" required placeholder="colleague@example.com">
+                </div>
+                
+                <button type="submit" class="btn">Send Invitation</button>
+            </form>
+            
+            <div class="invite-info">
+                <h3>How it works</h3>
+                <ol>
+                    <li>Enter your colleague's email address</li>
+                    <li>They'll receive an invitation email</li>
+                    <li>They can click the link to create an account</li>
+                    <li>Their account will be linked to yours</li>
+                </ol>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; {{ now.year }} Presis Time Tracker</p>
+    </footer>
 </body>
 </html>

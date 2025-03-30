@@ -293,6 +293,376 @@ input[type="password"] {
   font-style: italic;
 }
 
+/* Project Management */
+.project-management {
+  margin-bottom: 2rem;
+}
+
+.merge-projects {
+  background-color: #f9f9f9;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  margin-top: 1rem;
+}
+
+.merge-projects h3 {
+  margin-bottom: 0.5rem;
+  color: var(--secondary-color);
+  font-size: 1.1rem;
+}
+
+.merge-projects p {
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  color: var(--gray-color);
+}
+
+.merge-projects select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 1rem;
+  background-color: white;
+}
+
+/* Manual Time Entry */
+.manual-entry-form {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: var(--light-color);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.manual-entry-form h4 {
+  margin-bottom: 1rem;
+  color: var(--secondary-color);
+  font-size: 1.1rem;
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.form-row .form-group {
+  flex: 1;
+  min-width: 200px;
+}
+
+.toggle-manual-entry {
+  background-color: var(--secondary-color);
+  margin-top: 0.5rem;
+}
+
+.toggle-manual-entry:hover {
+  background-color: var(--primary-color);
+}
+
+/* Flatpickr Customization */
+.flatpickr-input {
+  background-color: white !important;
+}
+
+/* Calendar View Styles */
+.report-calendar {
+  margin-bottom: 2rem;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.view-btn {
+  padding: 0.5rem 1rem;
+  background-color: var(--light-color);
+  color: var(--dark-color);
+  border: 1px solid var(--border-color);
+}
+
+.view-btn.active {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+#calendar {
+  background-color: white;
+  padding: 1rem;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+}
+
+/* Collapsible Section */
+.collapsible {
+  cursor: pointer;
+  position: relative;
+}
+
+.toggle-icon {
+  position: absolute;
+  right: 1rem;
+  font-weight: bold;
+}
+
+.collapse-content {
+  padding-top: 1rem;
+}
+
+/* Session Comments */
+.session-comments {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.session-comments li {
+  padding: 0.5rem 0;
+  border-bottom: 1px dashed var(--border-color);
+}
+
+.session-comments li:last-child {
+  border-bottom: none;
+}
+
+.time-range {
+  font-size: 0.8rem;
+  color: var(--gray-color);
+  font-weight: 500;
+}
+
+.comment {
+  margin-left: 0.5rem;
+  display: inline-block;
+}
+
+.closing-comment {
+  margin-left: 0.5rem;
+  color: var(--primary-color);
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+/* Modal Styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+  background-color: white;
+  margin: 10% auto;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  width: 80%;
+  max-width: 600px;
+  position: relative;
+}
+
+.close {
+  position: absolute;
+  right: 1.5rem;
+  top: 1rem;
+  color: var(--gray-color);
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close:hover {
+  color: var(--dark-color);
+}
+
+.modal h3 {
+  margin-bottom: 1.5rem;
+  color: var(--secondary-color);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+#eventDetails p {
+  margin-bottom: 0.75rem;
+}
+
+.modal-actions, .form-actions {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+/* Profile Page Styles */
+.profile-details, .api-token, .cli-instructions {
+  margin-bottom: 2rem;
+}
+
+.user-info {
+  background-color: var(--light-color);
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.token-display {
+  margin: 1.5rem 0;
+}
+
+pre.token {
+  background-color: var(--light-color);
+  border: 1px solid var(--border-color);
+  padding: 1rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-family: monospace;
+  margin: 0.5rem 0;
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+
+.token-form {
+  margin: 1.5rem 0;
+}
+
+.instructions-card {
+  background-color: var(--light-color);
+  padding: 1.5rem;
+  border-radius: 8px;
+}
+
+.instructions-card h3 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--secondary-color);
+}
+
+.instructions-card h3:first-child {
+  margin-top: 0;
+}
+
+.instructions-card pre {
+  background-color: white;
+  border: 1px solid var(--border-color);
+  padding: 0.5rem;
+  border-radius: 4px;
+  margin: 0.5rem 0;
+  font-family: monospace;
+  overflow-x: auto;
+}
+
+.instructions-card ol, .instructions-card ul {
+  padding-left: 1.5rem;
+}
+
+.instructions-card li {
+  margin-bottom: 1rem;
+}
+
+/* Admin Panel Styles */
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.admin-table th, .admin-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.admin-table th {
+  background-color: var(--light-color);
+  font-weight: 600;
+}
+
+.admin-table tr:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  background-color: var(--gray-color);
+  color: white;
+}
+
+.badge.admin {
+  background-color: var(--primary-color);
+}
+
+.badge.paid {
+  background-color: var(--success-color);
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.inline-form {
+  display: inline-block;
+}
+
+.btn.small {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* Invite Page Styles */
+.invite-section {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.invite-section p {
+  margin-bottom: 1.5rem;
+  color: var(--gray-color);
+}
+
+.invite-form {
+  background-color: var(--light-color);
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  border: 1px solid var(--border-color);
+}
+
+.invite-info {
+  background-color: #f9f9f9;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.invite-info h3 {
+  margin-bottom: 1rem;
+  color: var(--secondary-color);
+  font-size: 1.1rem;
+}
+
+.invite-info ol {
+  padding-left: 1.5rem;
+}
+
+.invite-info li {
+  margin-bottom: 0.5rem;
+}
+
 /* Responsive Adjustments */
 @media (max-width: 768px) {
   header {

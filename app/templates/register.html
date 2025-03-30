@@ -57,7 +57,7 @@
                     <h3>Payment Information</h3>
                     <div class="form-group">
                         <label for="card-element">Credit or debit card:</label>
-                        <div id="card-element" class="form-control">
+                        <div id="card-element" class="form-control" data-purpose="credit-card-field">
                             <!-- Stripe Elements will create form elements here -->
                         </div>
                         <div id="card-errors" role="alert" class="error-message"></div>
@@ -88,11 +88,77 @@
         var stripe = Stripe('{{ stripe_publishable_key }}');
         var elements = stripe.elements();
         
-        // Create an instance of the card Element
-        var card = elements.create('card');
+        // Create an instance of the card Element with autocomplete attributes
+        var card = elements.create('card', {
+            classes: {
+                base: 'credit-card-input'
+            },
+            style: {
+                base: {
+                    color: '#32325d',
+                    fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+                    fontSmoothing: 'antialiased',
+                    fontSize: '16px',
+                    '::placeholder': {
+                        color: '#aab7c4'
+                    }
+                },
+                invalid: {
+                    color: '#fa755a',
+                    iconColor: '#fa755a'
+                }
+            }
+        });
         
         // Add an instance of the card Element into the `card-element` div
         card.mount('#card-element');
+        
+        // Add hidden fields for password managers to detect
+        var paymentForm = document.getElementById('payment-form');
+        var hiddenCardFields = document.createElement('div');
+        hiddenCardFields.style.height = '0';
+        hiddenCardFields.style.overflow = 'hidden';
+        hiddenCardFields.style.position = 'absolute';
+        hiddenCardFields.style.visibility = 'hidden';
+        
+        // Create hidden fields with standard names and autocomplete attributes
+        var cardNumberField = document.createElement('input');
+        cardNumberField.setAttribute('type', 'text');
+        cardNumberField.setAttribute('name', 'cardnumber');
+        cardNumberField.setAttribute('id', 'cardnumber');
+        cardNumberField.setAttribute('autocomplete', 'cc-number');
+        cardNumberField.setAttribute('data-lpignore', 'false');
+        
+        var cardExpField = document.createElement('input');
+        cardExpField.setAttribute('type', 'text');
+        cardExpField.setAttribute('name', 'cc-exp');
+        cardExpField.setAttribute('id', 'cc-exp');
+        cardExpField.setAttribute('autocomplete', 'cc-exp');
+        cardExpField.setAttribute('data-lpignore', 'false');
+        
+        var cardCvcField = document.createElement('input');
+        cardCvcField.setAttribute('type', 'text');
+        cardCvcField.setAttribute('name', 'cvc');
+        cardCvcField.setAttribute('id', 'cvc');
+        cardCvcField.setAttribute('autocomplete', 'cc-csc');
+        cardCvcField.setAttribute('data-lpignore', 'false');
+        
+        var cardNameField = document.createElement('input');
+        cardNameField.setAttribute('type', 'text');
+        cardNameField.setAttribute('name', 'ccname');
+        cardNameField.setAttribute('id', 'ccname');
+        cardNameField.setAttribute('autocomplete', 'cc-name');
+        cardNameField.setAttribute('data-lpignore', 'false');
+        
+        // Add hidden fields to the form
+        hiddenCardFields.appendChild(cardNumberField);
+        hiddenCardFields.appendChild(cardExpField);
+        hiddenCardFields.appendChild(cardCvcField);
+        hiddenCardFields.appendChild(cardNameField);
+        
+        // Insert hidden fields after the card element
+        var cardElement = document.getElementById('card-element');
+        cardElement.parentNode.insertBefore(hiddenCardFields, cardElement.nextSibling);
         
         // Handle form submission
         var form = document.getElementById('payment-form');

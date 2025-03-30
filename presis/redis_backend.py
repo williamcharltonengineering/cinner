@@ -5,8 +5,8 @@ from datetime import timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 
 class RedisBackend:
-    def __init__(self, host="localhost", port=6379, db=0):
-        self.r = redis.StrictRedis(host=host, port=port, db=db, decode_responses=True)
+    def __init__(self, host="localhost", port=6379, db=0, password=None):
+        self.r = redis.StrictRedis(host=host, port=port, db=db, password=password, decode_responses=True)
 
     def create_user(self, username, password):
         """Create a new user with a unique ID and store a hashed password."""

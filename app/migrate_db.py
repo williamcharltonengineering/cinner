@@ -114,9 +114,9 @@ def migrate_database():
             
             # Insert into new database
             cursor_new.execute(
-                "INSERT INTO user (id, email, password, is_admin, has_paid_plan, subscription_id, time_data_file) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO user (id, email, password, is_admin, has_paid_plan, subscription_id, time_data_file, api_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 (user_dict["id"], user_dict["email"], user_dict["password"], is_admin, has_paid_plan, 
-                 user_dict["subscription_id"], user_dict["time_data_file"])
+                 user_dict["subscription_id"], user_dict["time_data_file"], None)
             )
         
         # Commit changes and close connections
